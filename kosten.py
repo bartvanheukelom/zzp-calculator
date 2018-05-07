@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 
 import berekening
 
@@ -14,7 +15,11 @@ dagenrange = (4, 20)
 dagenrangerange = range(dagenrange[0], dagenrange[1]+1)
 
 
-def main():
+def simplemain():
+    persoonlijke_berekening(12, E(80), True)
+
+
+def plotmain():
     plt.switch_backend('QT4Agg')
 
     fig, ax = plt.subplots()
@@ -40,7 +45,7 @@ def main():
 
     # for uti in range(60, 125, 10):
     def update(_=None):
-        uurtarief = berekening.E(slider_uurtarief.val)
+        uurtarief = E(slider_uurtarief.val)
         x, y = plot_dagenmaand_nettoinkomen(uurtarief)
         for i, ln in enumerate(lines):
             ln.set_xdata(x)
@@ -53,19 +58,25 @@ def main():
     plt.show()
 
 
+def persoonlijke_berekening(dagenmaand, uurtarief, printit=False):
+    return berekening.Berekening(out=print if printit else None).bereken(
+        dagenmaand, uurtarief,
+        extra_bruto_inkomen=prive.brutoloon_baan(dagenmaand)
+    )
+
+
 def plot_dagenmaand_nettoinkomen(uurtarief):
     x = []
     y = []
     for dagenmaand in dagenrangerange:
-        res = berekening.Berekening().bereken(
-            dagenmaand, uurtarief,
-            extra_bruto_inkomen=prive.brutoloon_baan(dagenmaand)
-        )
-
+        res = persoonlijke_berekening(dagenmaand, uurtarief)
         x.append(dagenmaand)
         y.append(res)
     return x, y
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == 'simple':
+        simplemain()
+    else:
+        plotmain()

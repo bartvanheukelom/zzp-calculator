@@ -9,6 +9,17 @@ uren_per_werkdag = 8
 urencriterium = 1225
 mkb_vrijstelling = Decimal("0.14")
 
+# https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/boxen_en_tarieven/overzicht_tarieven_en_schijven/u-hebt-in-2018-de-aow-leeftijd-nog-niet-bereikt
+box1schijven = [
+    (E(20143), Decimal("0.3655")),
+    (E(33995), Decimal("0.4085")),
+    (E(68507), Decimal("0.4085")),
+    (None    , Decimal("0.5195"))
+]
+algemene_heffingskorting_bereik = (E(20142), E(68507))
+algemene_heffingskorting_pct = Decimal("0.04683")
+algemene_heffingskorting_basis = E(2265)
+
 
 class Berekening:
 
@@ -48,7 +59,9 @@ class Berekening:
         aftrekbare_kosten = self.bereken_aftrekbare_kosten(tijd_totaal)
 
         # bereken inkomstenbelasting over alle inkomsten in box 1
-        belasting = self.bereken_belasting(belastbare_winst + extra_bruto_inkomen - aftrekbare_kosten)
+        verzamelinkomen = self.show('Verzamelinkomen',
+                                    belastbare_winst + extra_bruto_inkomen - aftrekbare_kosten)
+        belasting = self.bereken_belasting(verzamelinkomen)
         self.line()
 
         # wat blijft er over na betalen van belasting en privekosten
@@ -58,13 +71,14 @@ class Berekening:
         self.show('Maandloon', netto_na_uitgaven / 12)
         self.show('Uurloon', netto_na_uitgaven / uren(tijd_totaal))
 
-        return winst_uo, extra_bruto_inkomen, netto_na_uitgaven
+        return winst_uo, extra_bruto_inkomen, verzamelinkomen, netto_na_uitgaven
 
     @staticmethod
     def uitkomsten():
         return [
                 'Winst uit onderneming',
                 'Extra bruto inkomen',
+                'Verzamelinkomen',
                 'Netto na uitgaven'
         ]
 
@@ -73,8 +87,36 @@ class Berekening:
         premie_aov = self.show('Premie AOV', uren(tijd_totaal) * E(1))
         return self.show('Subtotaal aftrekbare kosten', premie_aov)
 
-    def bereken_belasting(self, belastbare_winst):
-        return self.show('Belasting', Decimal(0.2) * belastbare_winst)
+    def bereken_belasting(self, verzamelinkomen):
+
+        heffing = E(0)
+
+        inkomen_over = verzamelinkomen
+        for s in range(0, len(box1schijven)):
+            onderschijf = box1schijven[s-1] if s > 0 else None
+            dezeschijf = box1schijven[s]
+            schijfnaam = 'Schijf ' + str(s+1)
+
+            # laatste schijf
+            if dezeschijf[0] is None:
+                inkomen_in_deze_schijf = self.show('Inkomen ' + schijfnaam, inkomen_over)
+            else:
+                schijfgrootte = self.show('Grootte ' + schijfnaam,
+                                          dezeschijf[0] - (E(0) if onderschijf is None else onderschijf[0]))
+                inkomen_in_deze_schijf = self.show('Inkomen ' + schijfnaam, min(schijfgrootte, inkomen_over))
+            heffing += self.show('Heffing ' + schijfnaam, inkomen_in_deze_schijf * dezeschijf[1])
+            inkomen_over -= inkomen_in_deze_schijf
+
+        ahmin, ahmax = algemene_heffingskorting_bereik
+        if verzamelinkomen <= ahmin:
+            ahk = algemene_heffingskorting_basis
+        elif verzamelinkomen > ahmax:
+            ahk = E(0)
+        else:
+            ahk = algemene_heffingskorting_basis - algemene_heffingskorting_pct * (verzamelinkomen - ahmin)
+        heffing -= self.show('Algemene heffingskorting', ahk)
+
+        return self.show('Totale heffing box 1', heffing)
 
     def bereken_kosten(self, verzekeringen):
         kosten = self.show('Verzekeringen', sum(b * 12 for a, b in verzekeringen))
