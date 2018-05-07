@@ -12,7 +12,7 @@ from matplotlib.widgets import Slider
 
 E = berekening.E
 
-dagenrange = (4, 20)
+dagenrange = (2, 24)
 dagenrangerange = range(dagenrange[0], dagenrange[1]+1)
 urenrange = range(dagenrange[0]*8, dagenrange[1]*8+1)
 
