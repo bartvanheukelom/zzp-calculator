@@ -31,7 +31,7 @@ class Berekening:
         tijd_betaald, tijd_totaal = self.bereken_uren(
             dagen_werken_maand=dagen_werken_maand,
             tijdfactor_betaald=0.75,
-            vakantiefactor=1/12
+            vakantiefactor=5/52
         )
         self.line()
 
@@ -57,11 +57,13 @@ class Berekening:
 
         # bereken aftrekbare prive-kostenposten die zonder zaak niet nodig zouden zijn
         aftrekbare_kosten = self.bereken_aftrekbare_kosten(tijd_totaal)
+        self.line()
 
         # bereken inkomstenbelasting over alle inkomsten in box 1
         verzamelinkomen = self.show('Verzamelinkomen',
                                     belastbare_winst + extra_bruto_inkomen - aftrekbare_kosten)
         arbeidsinkomen = self.show('Arbeidsinkomen', winst_uo + extra_bruto_inkomen)
+        self.line()
         belasting = self.bereken_belasting(verzamelinkomen, arbeidsinkomen)
         self.line()
 
@@ -103,8 +105,7 @@ class Berekening:
             if dezeschijf[0] is None:
                 inkomen_in_deze_schijf = self.show('Inkomen ' + schijfnaam, inkomen_over)
             else:
-                schijfgrootte = self.show('Grootte ' + schijfnaam,
-                                          dezeschijf[0] - (E(0) if onderschijf is None else onderschijf[0]))
+                schijfgrootte = dezeschijf[0] - (E(0) if onderschijf is None else onderschijf[0])
                 inkomen_in_deze_schijf = self.show('Inkomen ' + schijfnaam, min(schijfgrootte, inkomen_over))
             heffing += self.show('Heffing ' + schijfnaam, inkomen_in_deze_schijf * dezeschijf[1])
             inkomen_over -= inkomen_in_deze_schijf

@@ -13,6 +13,7 @@ E = berekening.E
 
 dagenrange = (4, 20)
 dagenrangerange = range(dagenrange[0], dagenrange[1]+1)
+urenrange = range(dagenrange[0]*8, dagenrange[1]*8+1)
 
 
 def simplemain():
@@ -68,7 +69,8 @@ def persoonlijke_berekening(dagenmaand, uurtarief, printit=False):
 def plot_dagenmaand_nettoinkomen(uurtarief):
     x = []
     y = []
-    for dagenmaand in dagenrangerange:
+    for urenmaand in urenrange:
+        dagenmaand = urenmaand / 8
         res = persoonlijke_berekening(dagenmaand, uurtarief)
         x.append(dagenmaand)
         y.append(res)
