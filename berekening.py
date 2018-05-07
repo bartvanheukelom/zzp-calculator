@@ -61,7 +61,8 @@ class Berekening:
         # bereken inkomstenbelasting over alle inkomsten in box 1
         verzamelinkomen = self.show('Verzamelinkomen',
                                     belastbare_winst + extra_bruto_inkomen - aftrekbare_kosten)
-        belasting = self.bereken_belasting(verzamelinkomen)
+        arbeidsinkomen = self.show('Arbeidsinkomen', winst_uo + extra_bruto_inkomen)
+        belasting = self.bereken_belasting(verzamelinkomen, arbeidsinkomen)
         self.line()
 
         # wat blijft er over na betalen van belasting en privekosten
@@ -87,10 +88,11 @@ class Berekening:
         premie_aov = self.show('Premie AOV', uren(tijd_totaal) * E(1))
         return self.show('Subtotaal aftrekbare kosten', premie_aov)
 
-    def bereken_belasting(self, verzamelinkomen):
+    def bereken_belasting(self, verzamelinkomen, arbeidsinkomen):
 
         heffing = E(0)
 
+        # basisheffing met de schijven en zo
         inkomen_over = verzamelinkomen
         for s in range(0, len(box1schijven)):
             onderschijf = box1schijven[s-1] if s > 0 else None
@@ -107,6 +109,7 @@ class Berekening:
             heffing += self.show('Heffing ' + schijfnaam, inkomen_in_deze_schijf * dezeschijf[1])
             inkomen_over -= inkomen_in_deze_schijf
 
+        # algemene heffingskorting
         ahmin, ahmax = algemene_heffingskorting_bereik
         if verzamelinkomen <= ahmin:
             ahk = algemene_heffingskorting_basis
@@ -115,6 +118,20 @@ class Berekening:
         else:
             ahk = algemene_heffingskorting_basis - algemene_heffingskorting_pct * (verzamelinkomen - ahmin)
         heffing -= self.show('Algemene heffingskorting', ahk)
+
+        # arbeidskorting
+        # meh, geen zin al deze getallen netjes bovenaan te zetten /shrug
+        if arbeidsinkomen <= E(9468):
+            arbeidskorting = Decimal("0.01764") * arbeidsinkomen
+        elif arbeidsinkomen <= E(20450):
+            arbeidskorting = E(167) + Decimal("0.28064") * (arbeidsinkomen - E(9468))
+        elif arbeidsinkomen <= E(33112):
+            arbeidskorting = E(3249)
+        elif arbeidsinkomen <= E(123362):
+            arbeidskorting = E(3249) - Decimal("0.036") * (arbeidsinkomen - E(33112))
+        else:
+            arbeidskorting = E(0)
+        heffing -= self.show('Arbeidskorting', arbeidskorting)
 
         return self.show('Totale heffing box 1', heffing)
 
