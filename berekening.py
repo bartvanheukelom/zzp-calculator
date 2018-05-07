@@ -42,7 +42,6 @@ class Berekening:
             ('Bedrijfsaansprakelijkheid', E(150)),
             ('Rechtsbijstand', E(30)),
             # ('Inventaris', E(10)) # is gedekt op persoonlijke inboedel
-            # TODO
         ])
         self.line()
 
@@ -138,6 +137,8 @@ class Berekening:
 
     def bereken_kosten(self, verzekeringen):
         kosten = self.show('Verzekeringen', sum(b * 12 for a, b in verzekeringen))
+        kosten += self.show('Laptop', E(600))  # 1800 per 3 jaar
+        kosten += self.show('Servers', E(30) * 12)
         return self.show("Kosten", kosten)
 
     def bereken_belastbare_winst(self, winst_uo, tijd_totaal):
