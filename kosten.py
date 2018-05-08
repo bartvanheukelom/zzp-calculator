@@ -58,7 +58,8 @@ def plotmain(xvar=Var.DAGEN):
     plt.grid()
 
     # welke lijnen komen er
-    lines = [plt.plot([], [], label=u)[0] for u in berekening.Berekening.uitkomsten()]
+    styles = ['r-', 'g:', 'b--', 'k-.']
+    lines = [plt.plot([], [], styles[i], label=u)[0] for i, u in enumerate(berekening.Berekening.uitkomsten())]
     plt.legend()
 
     # voeg een slider toe
