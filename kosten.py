@@ -9,6 +9,8 @@ import berekening
 import prive
 
 import numpy
+import matplotlib
+import matplotlib.ticker
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
@@ -34,7 +36,8 @@ def plotmain(xvar=Var.DAGEN):
     # maak mooier
     plt.switch_backend('QT4Agg')
 
-    fig, _ = plt.subplots()
+    fig, ax_ = plt.subplots()
+    ax: plt.Axes = ax_
 
     # x-as
     if xvar == Var.DAGEN:
@@ -50,6 +53,7 @@ def plotmain(xvar=Var.DAGEN):
     plt.ylabel('Bedrag')
     plt.ylim(0, 100000)
     plt.yticks(range(0, 100001, 10000))
+    ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: berekening.fmtcur(x)))
 
     plt.grid()
 
